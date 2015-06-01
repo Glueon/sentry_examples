@@ -1,0 +1,39 @@
+data:
+  image: busybox
+  volumes:
+  - /data
+
+dbdata:
+  image: busybox
+  volumes:
+  - /var/lib/postgresql/data
+
+postgres:
+  image: postgres:latest
+  volumes_from:
+  - dbdata
+
+redis:
+  image: redis:latest
+
+sentry:
+  image: slafs/sentry
+  environment:
+  - SECRET_KEY=randomvalue
+  - SENTRY_URL_PREFIX=http://sentry.mydomain.com
+  - DATABASE_URL=postgres://postgres:@postgresdb/postgres
+  links:
+  - postgres:postgresdb
+  - redis:redis
+  ports:
+  - "80:9000"
+  volumes_from:
+  - data
+
+app:
+  build: .
+  command: true
+  links:
+  - sentry:sentry.mydomain.com
+  volumes:
+  - .:/usr/src/app
